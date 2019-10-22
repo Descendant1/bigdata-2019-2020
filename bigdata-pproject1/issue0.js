@@ -88,7 +88,7 @@ var validator =
         return true;
     },
     validateAccounts: (accounts) => {
-
+        print("valid acc    ")
         let accErrors = [];
 
         accounts.forEach(acc => {
@@ -106,9 +106,10 @@ var validator =
         if (accErrors.length > 0) {
             accErrors.forEach(error => {
                 print(error);
+                return false;
             })
         }
-
+        return true;
     }
 }
 
@@ -131,7 +132,6 @@ var dbw =
         return emp;
     },
     insertEmployee: (emp) => {
-        print("ins emp")
         if (!validator.validateEmployee(emp)) {
             return;
         }
@@ -214,13 +214,11 @@ var dbw =
 
     //Accounts
     insertAccounts: (accounts) => {
-        if (!validator.validateAccounts(accounts)) {
-            return;
-        }
         accounts.forEach(acc => {
-            if (!acc.currencyType || acc.currencyType.trim() == "") {
-                acc.currencyType = "BGN";
+            if (!validator.validateAccounts(accounts)) {
+                return;
             }
+            print(acc.name + " inserted ACCOUNT")
             db.Accounts.insert(acc);
         });
     }
@@ -265,7 +263,7 @@ var initializer = {
         let bosses = [];
 
         while (quantity > 0) {
-            print("zhopa")
+            
             let employee =
             {
                 "_id": quantity * 3,
@@ -287,7 +285,7 @@ var initializer = {
                 bosses.push(employee);
             }
             //random push the employee to boss
-            if (bosses.length > 0 && helper.randomIntNext(1, 100) <= 20) {
+            if (bosses.length > 0 && helper.randomIntNext(1, 100) <= 10 ) {
                 employee.boss = helper.arrayTakeRandomMember(bosses);
                 employee.bossId = employee.boss._id;
             }
@@ -313,19 +311,19 @@ var initializer = {
                 "lastName": helper.arrayTakeRandomMember(lastNames),
                 "middleName": helper.arrayTakeRandomMember(middleNames),
                 "correspondenceAddress": helper.arrayTakeRandomMember(addresses),
-                "phoneNumber": "+35989" + helper.randonIntNext(10000, 99999),
+                "phoneNumber": "+35989" + helper.randomIntNext(10000, 99999),
                 "accounts": []
             }
             client.email = client.firstName.toLowerCase() + helper.arrayTakeRandomMember(emailDomains);
 
-            accQuantity = helper.randomIntNext(1, 5);
+            accQuantity = helper.randomIntNext(1, 3);
             for (let index = 0; index < accQuantity; index++) {
 
                 let acc =
                 {
                     "_id": quantity * 4 - 3,
                     "name": Math.random().toString(32).slice(2),
-                    "currencyType": helper.arrayTakeRandomMember(currencyTypes),
+                    "currencyType": helper.arrayTakeRandomMember(currencyTypes) || "BGN",
                     "amount": helper.randomIntNext(1000, 10000),
                     "idClient": client._id
                 }
