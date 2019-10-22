@@ -73,12 +73,6 @@ var validator =
             }
         });
 
-
-        // if(!dbw.getDepartmentById(dep._id))
-        // {
-        //     depErrors.push( dep.name + " not found");
-        // }
-
         if (depErrors.length > 0) {
             depErrors.forEach(error => {
                 print(error);
@@ -116,19 +110,16 @@ var validator =
 var dbw =
 {
     //Employee 
-    getEmployees: () => {
-        return db.Employees.find().pretty();
+    getEmployees: (callback) => {
+        return db.Employees.find(callback).pretty();
     },
     getEmployeeById: (id) => {
 
-        let emp = db.Employees.findOne({ _id: id });
+        let emp = db.Employees.findOne({ "_id": id });
         if (!emp) {
             print("Employee with given Id not found;");
             return;
         }
-        emp.boss = this.getEmployeeById(emp.bossId);
-        emp.department = this.getDepartmentById(emp.departmentId);
-
         return emp;
     },
     insertEmployee: (emp) => {
@@ -144,7 +135,7 @@ var dbw =
         }
         let employee = this.getEmployeeById(emp._id);
 
-        db.Employees.update({ _id: employee._id }, emp);
+        db.Employees.updateOne({ _id: employee._id }, emp);
     },
     deleteEmployee: (id) => {
         db.Employees.deleteOne({ _id: id });
@@ -225,12 +216,6 @@ var dbw =
 
 };
 
-
-
-
-
-
-
 var initializer = {
     checkCollections: () => {
         db.Employees.drop()
@@ -258,7 +243,8 @@ var initializer = {
         let middleNames = ["Pashaarelav", "Sashsaroj", "Dashdnitnatsnok", "Natashnnotna", "Katerinaahsola", null, null, null, null, null, null, null, null, null];
         let addresses = ["6 BARR RD", "54 LOWDEN AVE", "3 LAMBERT TER", "21807 COUNTY RD", "333 CARLTON DR", "200 Cider Brook Dr.", "1231 N WATER RD", "12615 S CENTRAL PARK AV", "18 HAMPTON ST", "5656 S 56TH ST", "W BROWN DEER RD", "654 CONT WAY", "60 INMAN DR", "74 WATER ST", "P O BOX NWBOX 99149", "2661 330TH ST", "100 WATER ST", "ADDL ADDRESS TEST", "29 Industrial Dr E", "2118 OPAL DR", "THERESA L GUAY", "123 MAIN STREET", "PO BOX 938", "5588 MAINCOON RD", "129 TIMSON ST", "205 DOLLAR ST", "W204 N5681 LANNON RD", "232 B ST", "1616 NORTH AVE"]
         let emailDomains = ["@yahoo.com", "@yandex.com", "@gmail.com", "@mail.ru", "@abv.bg"];
-        let posts = ["CEO", "CTO", "COO", "CFO", "CMO", "HR", "Developer", "QA"]
+        let posts = ["CEO", "CTO", "COO", "CFO", "CMO", "HR", "Developer", "QA"];
+        let countries = ["Bulgaria","USA","Ukraine","Russia","Belarus"];
 
         let bosses = [];
 
@@ -273,19 +259,21 @@ var initializer = {
                 "correspondenceAddress": helper.arrayTakeRandomMember(addresses),
                 "phoneNumber": "+35989" + helper.randomIntNext(100000, 999999),
                 "post": helper.arrayTakeRandomMember(posts),
-                "department": helper.arrayTakeRandomMemberMongo(departments, db.Departments.count())
-            }
+                "department": helper.arrayTakeRandomMemberMongo(departments, db.Departments.count()),
+                //Part 1 addition
+                "salary": Math.round( helper.randomIntNext(15000,25000) /1000) *1000,
+                "dateStarted" : new Date().setFullYear(new Date().getFullYear() - helper.randomIntNext(0,20)),
+                "country" : helper.arrayTakeRandomMember(countries)
+                //"birthCountry" :helper.arrayTakeRandomMember(countries)
+            };
             employee.email = employee.firstName.toLowerCase() + helper.arrayTakeRandomMember(emailDomains);
 
-            print(employee.department.name);
-
-            employee.departmentId = employee.department._id;
             //defining bosses
             if (helper.randomIntNext(1, 100) <= 10) {
                 bosses.push(employee);
             }
             //random push the employee to boss
-            if (bosses.length > 0 && helper.randomIntNext(1, 100) <= 10 ) {
+            if (bosses.length > 1 && helper.randomIntNext(1, 100) <= 10 ) {
                 employee.boss = helper.arrayTakeRandomMember(bosses);
                 employee.bossId = employee.boss._id;
             }
@@ -343,6 +331,5 @@ var initializer = {
 
 initializer.checkCollections();
 initializer.generateDepartments();
-dbw.getDepartments();
 initializer.generateEmployees(10);
 initializer.generateClients(20);
