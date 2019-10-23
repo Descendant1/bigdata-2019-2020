@@ -1,3 +1,4 @@
+//load(Please load issues which were before this file)
 
 var addStatuses = () =>{
     let statuses =  [ "maternityLeave" ,"fired" ,"sick" ,"available" ,"vacation" ];
