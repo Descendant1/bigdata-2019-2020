@@ -1,3 +1,4 @@
+//load(Please load issues which were before this file)
 
 // 1 part
 dbw.getDepartments();
@@ -54,9 +55,9 @@ var listEmployeesContainI=()=>{
         { "middleName": { $regex: /I/i}}
     ]})
 };
-listSalaries();
-listEmails();
-listOldEmployees();
-listEmployeesStartWithS();
-getForeignEmployees();
-listEmployeesContainI();
+// listSalaries();
+// listEmails();
+// listOldEmployees();
+// listEmployeesStartWithS();
+// getForeignEmployees();
+// listEmployeesContainI();

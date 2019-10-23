@@ -1,4 +1,4 @@
-//  load("../../mngo/bigdata-pproject1/issue0.js");
+//load(Please load issues which were before this file)
 
 // 1 part
 initializer.randomlyMigrateEmployees();

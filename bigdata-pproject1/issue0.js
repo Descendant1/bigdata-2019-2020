@@ -214,7 +214,7 @@ var dbw =
         if (!validator.validateClient(dep)) {
             return;
         }
-        let department = dbw.getDepartmentById(dep._id);
+        let department = dbw    .getDepartmentById(dep._id);
 
         db.Departments.update({ _id: department._id }, dep);
     },
