@@ -11,14 +11,14 @@ var helper = {
     arrayTakeRandomMember: (array) => {
         return array[helper.randomIntNext(0, array.length - 1)];
     },
-    arrayTakeRandomMemberMongo: (array, length) => {
-        return array[helper.randomIntNext(0, length - 1)];
+    //https://stackoverflow.com/questions/9035627/elegant-method-to-generate-array-of-random-dates-within-two-dates
+    randomDate : (start, end) => {
+        return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
     }
 }
 var validator =
 {
     validateEmployee: (emp) => {
-        print("debug valid emp")
         let empErrors = [];
 
         employeeRequiredFields.forEach(field => {
@@ -41,7 +41,6 @@ var validator =
         return true;
     },
     validateClient: (client) => {
-        print("debug valid cli")
 
         let cliErrors = [];
 
@@ -82,7 +81,6 @@ var validator =
         return true;
     },
     validateAccounts: (accounts) => {
-        print("valid acc    ")
         let accErrors = [];
 
         accounts.forEach(acc => {
@@ -111,14 +109,29 @@ var dbw =
 {
     //Employee 
     getEmployees: (callback) => {
-        return db.Employees.find(callback).pretty();
+        let employees = db.Employees.find(callback).toArray()//.pretty();
+        employees.forEach(currEmp=>{
+            if(currEmp.bossId){
+                let tempBoss =  dbw.getEmployeeById(currEmp.bossId);
+                if(tempBoss){
+                    currEmp.boss = tempBoss;
+                }
+
+            }
+        });
+        return employees; 
     },
     getEmployeeById: (id) => {
 
+        if(!id){
+            return;
+        }
         let emp = db.Employees.findOne({ "_id": id });
         if (!emp) {
-            print("Employee with given Id not found;");
             return;
+        }
+        if( emp.bossId ){
+            emp.boss =  db.Employees.findOne({ "_id" : emp.bossId});
         }
         return emp;
     },
@@ -126,24 +139,32 @@ var dbw =
         if (!validator.validateEmployee(emp)) {
             return;
         }
-        print(emp.firstName + " " + emp.lastName + " inserted EMPLOYEE");
+
         db.Employees.insert(emp);
     },
     updateEmployee: (emp) => {
         if (!validator.validateEmployee(emp)) {
             return;
         }
-        let employee = this.getEmployeeById(emp._id);
+        let employee = dbw.getEmployeeById(emp._id);
+        //Part 2
+        if(emp.department.name != employee.department.name){
+            db.EmployeeDepartmentMigrations.insert( {
+                    "employeeMigratedId" : employee._id , 
+                    "department" : emp.department,
+                    "dateMigrated" :helper.randomDate( new Date(2000,0,1 ) , new Date() )
+            } );
+        };
 
-        db.Employees.updateOne({ _id: employee._id }, emp);
+        db.Employees.update({ _id: employee._id }, emp);
     },
     deleteEmployee: (id) => {
         db.Employees.deleteOne({ _id: id });
     },
 
     //Client
-    getClients: () => {
-        return db.Clients.find().pretty();
+    getClients: (callback) => {
+        return db.Clients.find(callback).pretty();
     },
     getClientById: (id) => {
         let client = db.Clients.findOne({ _id: id });
@@ -157,14 +178,13 @@ var dbw =
         if (!validator.validateClient(client) || !validator.validateAccounts(client.accounts)) {
             return;
         }
-        print(client.firstName + " " + client.lastName + " inserted CLIENT");
         db.Clients.insert(client);
     },
     updateClient: (client) => {
         if (!validator.validateClient(client)) {
             return;
         }
-        let cli = this.getClientById(client._id);
+        let cli = dbw.getClientById(client._id);
 
         db.Clients.update({ _id: cli._id }, client);
     },
@@ -174,7 +194,7 @@ var dbw =
 
     //Department
     getDepartments: () => {
-        return db.Departments.find().pretty();
+        return db.Departments.find().toArray();
     },
     getDepartmentById: (id) => {
         let dep = db.Departments.findOne({ _id: id });
@@ -188,7 +208,6 @@ var dbw =
         if (!validator.validateDepartment(dep)) {
             return;
         }
-        print(dep.name + " inserted DEPARTMENT");
         db.Departments.insert(dep);
     },
     updateDepartment: (dep) => {
@@ -209,7 +228,6 @@ var dbw =
             if (!validator.validateAccounts(accounts)) {
                 return;
             }
-            print(acc.name + " inserted ACCOUNT")
             db.Accounts.insert(acc);
         });
     }
@@ -218,14 +236,16 @@ var dbw =
 
 var initializer = {
     checkCollections: () => {
-        db.Employees.drop()
+        db.Employees.drop();
         db.createCollection("Employees");
-        db.Clients.drop()
+        db.Clients.drop();
         db.createCollection("Clients");
-        db.Departments.drop()
+        db.Departments.drop();
         db.createCollection("Departments");
-        db.Accounts.drop()
+        db.Accounts.drop();
         db.createCollection("Accounts");
+        db.EmployeeDepartmentMigrations.drop();
+        db.createCollection("EmployeeDepartmentMigrations");
     },
     generateDepartments: () => {
         let departmentNames = ["CEOs", "CTOs", "COOs", "CFOs", "CMOs", "HRs", "Developers", "QAs"]
@@ -249,7 +269,6 @@ var initializer = {
         let bosses = [];
 
         while (quantity > 0) {
-            
             let employee =
             {
                 "_id": quantity * 3,
@@ -259,23 +278,25 @@ var initializer = {
                 "correspondenceAddress": helper.arrayTakeRandomMember(addresses),
                 "phoneNumber": "+35989" + helper.randomIntNext(100000, 999999),
                 "post": helper.arrayTakeRandomMember(posts),
-                "department": helper.arrayTakeRandomMemberMongo(departments, db.Departments.count()),
+                "department": helper.arrayTakeRandomMember(departments),
                 //Part 1 addition
-                "salary": Math.round( helper.randomIntNext(15000,25000) /1000) *1000,
-                "dateStarted" : new Date().setFullYear(new Date().getFullYear() - helper.randomIntNext(0,20)),
+                "salary": Math.round( helper.randomIntNext(1000,15000) /1000) *1000,
+                "dateStarted" : helper.randomDate( new Date(2000,0,1 ) , new Date() ),
                 "country" : helper.arrayTakeRandomMember(countries)
                 //"birthCountry" :helper.arrayTakeRandomMember(countries)
             };
             employee.email = employee.firstName.toLowerCase() + helper.arrayTakeRandomMember(emailDomains);
 
             //defining bosses
-            if (helper.randomIntNext(1, 100) <= 10) {
+            if (helper.randomIntNext(1, 100) <= 45) {
                 bosses.push(employee);
             }
             //random push the employee to boss
-            if (bosses.length > 1 && helper.randomIntNext(1, 100) <= 10 ) {
-                employee.boss = helper.arrayTakeRandomMember(bosses);
-                employee.bossId = employee.boss._id;
+            if (bosses.length > 0 && helper.randomIntNext(1, 100) <= 50 ) {
+                let tempBoss = helper.arrayTakeRandomMember(bosses);
+                if(tempBoss._id != employee._id){
+                    employee.bossId = helper.arrayTakeRandomMember(bosses)._id;
+                }
             }
 
             dbw.insertEmployee(employee);
@@ -312,7 +333,7 @@ var initializer = {
                     "_id": quantity * 4 - 3,
                     "name": Math.random().toString(32).slice(2),
                     "currencyType": helper.arrayTakeRandomMember(currencyTypes) || "BGN",
-                    "amount": helper.randomIntNext(1000, 10000),
+                    "amount": helper.randomIntNext(0, 10000),
                     "idClient": client._id
                 }
                 client.accounts.push(acc);
@@ -325,11 +346,23 @@ var initializer = {
             --quantity;
         }
 
-    }
+    },
+    //Part 2
+    randomlyMigrateEmployees: () =>{
+        let migrationsCount = helper.randomIntNext(2,3);
+        let departmets = dbw.getDepartments();
+        let employees = dbw.getEmployees();
+        for (let index = 0; index < migrationsCount; index++) {
+            let tempEmp =  helper.arrayTakeRandomMember( employees );
+            tempEmp.department =  helper.arrayTakeRandomMember(departmets );
+            dbw.updateEmployee(tempEmp);
+        }
 
+    }
 }
 
 initializer.checkCollections();
 initializer.generateDepartments();
 initializer.generateEmployees(10);
 initializer.generateClients(20);
+initializer.randomlyMigrateEmployees();

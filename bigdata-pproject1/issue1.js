@@ -30,18 +30,18 @@ var listEmails = () =>{
 var listOldEmployees = ()=>{
     //$lte == '<=' https://docs.mongodb.com/manual/reference/operator/query/lte/
     let date  =  new Date().setFullYear( new Date().getFullYear() - 5 );
-    return dbw.getEmployees({dateStarted : {$lte:date}});
+    return dbw.getEmployees({"dateStarted" : {$lte:date}});
 };
 //5 part
 var listEmployeesStartWithS = () =>{
     //$regex -  match cond. /^S/
-    return dbw.getEmployees({firstName: {$regex: /^S/}});
+    return dbw.getEmployees({"firstName": {$regex: /^S/}});
 };
 //6 part
 // Foreign employees, do I need to have birth dates in Employees collection?
 var getForeignEmployees = () =>{
     //$ne = '!='
-    return dbw.getEmployees({country : {$ne:"Bulgaria"}});
+    return dbw.getEmployees({"country" : {$ne:"Bulgaria"}});
     // return dbw.getEmployees({birthCountry : {$ne:"Bulgaria"}});
 };
 //7 part
