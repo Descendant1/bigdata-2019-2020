@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Unichain</title>
+    <style>
+      #wallet-panel {
+        border  : solid #ff0000 2px;
+        padding : 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Register</h1>
+    <div id="wallet-panel" style="display: none;">
+      <span id="wallet-id"></span>
+    </div>
+
+    <div id="registerPanel">
+      <span>Email</span>
+      <input id="email" type="text" />
+
+      <span>Password</span>
+      <input id="pwd" type="password" />
+      <button onclick="register()"  > Submit </button>
+    </div>
+
+    <a href="./index.html">Go Back</a>
+
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>

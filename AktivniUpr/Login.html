@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Unichain</title>
+    <style>
+      #wallet-panel {
+        border  : solid #ff0000 2px;
+        padding : 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Login</h1>
+
+    <div id="wallet-panel" style="display: none;">
+      <span id="wallet-id"></span>
+    </div>
+
+    <div id="loginPanel">
+      <span>Hash</span>
+      <input id="hash" type="text" />
+      <button onclick="login()"  > Submit </button>
+    </div>
+
+    <a href="./index.html">Go Back</a>
+
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>
